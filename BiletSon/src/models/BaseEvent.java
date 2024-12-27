@@ -9,13 +9,15 @@ public abstract class BaseEvent {
     private Date eventDate;
     private String location;
     private BigDecimal price;
+    private int capacity;
 
-    public BaseEvent(int id, int cityId, Date eventDate, String location, BigDecimal price) {
+    public BaseEvent(int id, int cityId, Date eventDate, String location, BigDecimal price, int capacity) {
         this.id = id;
         this.cityId = cityId;
         this.eventDate = eventDate;
         this.location = location;
         this.price = price;
+        this.capacity = capacity;
     }
 
     public int getId() { return id; }
@@ -32,4 +34,7 @@ public abstract class BaseEvent {
     
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+    
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
 }
