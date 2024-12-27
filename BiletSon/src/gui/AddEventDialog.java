@@ -20,6 +20,7 @@ public class AddEventDialog extends JDialog {
     private String eventType;
     private CityDB cityDB;
     private boolean success = false;
+    private JTextField txtCapacity;
 
     public AddEventDialog(JFrame parent, String eventType) {
         super(parent, "Yeni " + eventType + " Ekle", true);
@@ -74,6 +75,14 @@ public class AddEventDialog extends JDialog {
         gbc.gridx = 1;
         txtPrice = new JTextField(20);
         add(txtPrice, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        add(new JLabel("Kapasite:"), gbc);
+
+        gbc.gridx = 1;
+        txtCapacity = new JTextField(20);
+        add(txtCapacity, gbc);
 
         JPanel buttonPanel = new JPanel();
         JButton btnSave = new JButton("Kaydet");
@@ -86,8 +95,8 @@ public class AddEventDialog extends JDialog {
         buttonPanel.add(btnCancel);
 
         gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 2;
+        gbc.gridy = 6; 
+        gbc.gridwidth = 2; 
         add(buttonPanel, gbc);
 
         pack();
@@ -138,8 +147,9 @@ public class AddEventDialog extends JDialog {
             java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
             String location = txtLocation.getText();
             BigDecimal price = new BigDecimal(txtPrice.getText());
+            int capacity = Integer.parseInt(txtCapacity.getText());
 
-            // City id al
+            // Get city ID
             City city = cityDB.getCityByName(cityName);
             if (city == null) {
                 throw new Exception("Şehir bulunamadı");
@@ -148,19 +158,19 @@ public class AddEventDialog extends JDialog {
             boolean result = false;
             switch (eventType) {
                 case "Konser":
-                    result = new ConcertDB().addConcert(name, city.getCityId(), sqlDate, location, price);
+                    result = new ConcertDB().addConcert(name, city.getCityId(), sqlDate, location, price, capacity);
                     break;
                 case "Müze":
-                    result = new MuseumDB().addMuseum(name, city.getCityId(), sqlDate, location, price);
+                    result = new MuseumDB().addMuseum(name, city.getCityId(), sqlDate, location, price, capacity);
                     break;
                 case "Festival":
-                    result = new FestivalDB().addFestival(name, city.getCityId(), sqlDate, location, price);
+                    result = new FestivalDB().addFestival(name, city.getCityId(), sqlDate, location, price, capacity);
                     break;
                 case "Sahne":
-                    result = new StageDB().addStage(name, city.getCityId(), sqlDate, location, price);
+                    result = new StageDB().addStage(name, city.getCityId(), sqlDate, location, price, capacity);
                     break;
                 case "Lunapark":
-                    result = new AmusementParkDB().addAmusementPark(name, city.getCityId(), sqlDate, location, price);
+                    result = new AmusementParkDB().addAmusementPark(name, city.getCityId(), sqlDate, location, price, capacity);
                     break;
             }
 
@@ -175,6 +185,11 @@ public class AddEventDialog extends JDialog {
         } catch (ParseException e) {
             JOptionPane.showMessageDialog(this,
                 "Geçersiz tarih formatı. Lütfen GG/AA/YYYY formatında girin.",
+                "Hata",
+                JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                "Geçersiz fiyat veya kapasite değeri.",
                 "Hata",
                 JOptionPane.ERROR_MESSAGE);
         } catch (SQLException e) {
@@ -192,7 +207,8 @@ public class AddEventDialog extends JDialog {
 
     private boolean validateInput() {
         if (txtName.getText().isEmpty() || txtDate.getText().isEmpty() ||
-            txtLocation.getText().isEmpty() || txtPrice.getText().isEmpty()) {
+            txtLocation.getText().isEmpty() || txtPrice.getText().isEmpty() ||
+            txtCapacity.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this,
                 "Lütfen tüm alanları doldurun",
                 "Hata",
@@ -205,6 +221,23 @@ public class AddEventDialog extends JDialog {
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
                 "Geçersiz fiyat formatı",
+                "Hata",
+                JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        try {
+            int capacity = Integer.parseInt(txtCapacity.getText());
+            if (capacity <= 0) {
+                JOptionPane.showMessageDialog(this,
+                    "Kapasite 0'dan büyük olmalıdır",
+                    "Hata",
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                "Geçersiz kapasite değeri",
                 "Hata",
                 JOptionPane.ERROR_MESSAGE);
             return false;
