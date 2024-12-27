@@ -104,4 +104,23 @@ public class TicketDB {
         }
         return null;
     }
+    
+    public int getBookedSeatsCount(int eventTypeId, int eventId) throws SQLException {
+        String query = "SELECT COUNT(*) as booked_seats FROM Tickets " +
+                      "WHERE event_type_id = ? AND event_id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setInt(1, eventTypeId);
+            stmt.setInt(2, eventId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("booked_seats");
+                }
+            }
+        }
+        return 0;
+    }
 }
