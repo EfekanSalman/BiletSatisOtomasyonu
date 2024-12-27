@@ -229,5 +229,96 @@ public class UserDB {
         }
     }
     
+    public boolean updateUserProfile(Customer customer) throws SQLException {
+        String query = "UPDATE Users SET first_name = ?, last_name = ?, username = ?, " +
+                      "email = ?, card_number = ?, cvv = ? WHERE user_id = ?";
+                      
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setString(1, customer.getFirstName());
+            stmt.setString(2, customer.getLastName());
+            stmt.setString(3, customer.getUsername());
+            stmt.setString(4, customer.getEmail());
+            stmt.setString(5, customer.getCardNumber());
+            stmt.setString(6, customer.getCvv());
+            stmt.setInt(7, customer.getUserId());
+            
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
+    
+    public User getUserById(int userId) throws SQLException {
+        String query = "SELECT * FROM Users WHERE user_id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setInt(1, userId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String role = rs.getString("role");
+                    if ("Customer".equals(role)) {
+                        return new Customer(
+                            rs.getInt("user_id"),
+                            rs.getString("first_name"),
+                            rs.getString("last_name"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getInt("security_question_id"),
+                            rs.getString("security_answer"),
+                            rs.getString("email"),
+                            rs.getString("card_number"),
+                            rs.getString("cvv")
+                        );
+                    } else if ("Admin".equals(role)) {
+                        return new Admin(
+                            rs.getInt("user_id"),
+                            rs.getString("first_name"),
+                            rs.getString("last_name"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getInt("security_question_id"),
+                            rs.getString("security_answer"),
+                            rs.getString("email"),
+                            rs.getString("admin_level")
+                        );
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    public boolean changePassword(int userId, String currentPassword, String newPassword) throws SQLException {
+        String query = "SELECT password FROM Users WHERE user_id = ? AND password = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setInt(1, userId);
+            stmt.setString(2, currentPassword);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false; 
+                }
+            }
+        }
+
+        query = "UPDATE Users SET password = ? WHERE user_id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            
+            stmt.setString(1, newPassword);
+            stmt.setInt(2, userId);
+            
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
     
 }
