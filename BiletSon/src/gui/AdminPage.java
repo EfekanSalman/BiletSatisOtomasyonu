@@ -89,6 +89,15 @@ public class AdminPage extends JFrame {
         JButton btnUpdateRole = new JButton("Rolü Güncelle");
         btnUpdateRole.setBounds(230, 460, 120, 25);
         usersPanel.add(btnUpdateRole);
+        
+        JButton btnDeleteUser = new JButton("Kullanıcıyı Sil");
+        btnDeleteUser.setBounds(360, 460, 120, 25);
+        btnDeleteUser.setBackground(new Color(220, 53, 69));
+        btnDeleteUser.setForeground(Color.WHITE);
+        btnDeleteUser.setFocusPainted(false);
+        usersPanel.add(btnDeleteUser);
+        
+        btnDeleteUser.addActionListener(e -> deleteSelectedUser());
 
         JPanel eventsPanel = new JPanel();
         tabbedPane.addTab("Etkinlikler", null, eventsPanel, null);
@@ -113,11 +122,18 @@ public class AdminPage extends JFrame {
         eventsPanel.add(eventScrollPane);
 
         eventTableModel = new DefaultTableModel(
-            new Object[][] {},
-            new String[] {"ID", "İsim", "Şehir", "Tarih", "Lokasyon", "Fiyat"}
-        );
+                new Object[][] {},
+                new String[] {"ID", "İsim", "Şehir", "Tarih", "Lokasyon", "Fiyat"}
+            );
+
         eventTable = new JTable(eventTableModel);
         eventScrollPane.setViewportView(eventTable);
+        
+        JButton btnEditEvent = new JButton("Etkinliği Düzenle");
+        btnEditEvent.setBounds(140, 460, 140, 25);
+        eventsPanel.add(btnEditEvent);
+
+        btnEditEvent.addActionListener(e -> editSelectedEvent());
 
         JButton btnDeleteEvent = new JButton("Etkinliği Sil");
         btnDeleteEvent.setBounds(10, 460, 120, 25);
@@ -321,6 +337,62 @@ public class AdminPage extends JFrame {
             }
         } catch (SQLException e) {
             showError("Etkinlik silinirken hata oluştu: " + e.getMessage());
+        }
+    }
+    
+    private void editSelectedEvent() {
+        int selectedRow = eventTable.getSelectedRow();
+        if (selectedRow == -1) {
+            showError("Lütfen bir etkinlik seçin");
+            return;
+        }
+
+        int eventId = (int) eventTable.getValueAt(selectedRow, 0);
+        String selectedType = (String) eventTypeCombo.getSelectedItem();
+
+        EditEventDialog dialog = new EditEventDialog(this, selectedType, eventId);
+        dialog.setVisible(true);
+        
+        if (dialog.isSuccess()) {
+            loadEventsByType();
+        }
+    }
+    
+    private void deleteSelectedUser() {
+        int selectedRow = userTable.getSelectedRow();
+        if (selectedRow == -1) {
+            showError("Lütfen bir kullanıcı seçin");
+            return;
+        }
+
+        int userId = (int) userTable.getValueAt(selectedRow, 0);
+        String username = (String) userTable.getValueAt(selectedRow, 3);
+
+        // admin kendi hesabıbı silemez
+        if (userId == this.adminId) {
+            showError("Kendi hesabınızı silemezsiniz!");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            username + " kullanıcısını silmek istediğinize emin misiniz?\n" +
+            "Bu işlem geri alınamaz!",
+            "Kullanıcı Silme Onayı",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                if (userDB.deleteUser(userId)) {
+                    loadUsers(); // Silinndikten sonra ekranı yeniden göster
+                    JOptionPane.showMessageDialog(this,
+                        "Kullanıcı başarıyla silindi",
+                        "Başarılı",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (SQLException ex) {
+                showError("Kullanıcı silinirken hata oluştu: " + ex.getMessage());
+            }
         }
     }
 
