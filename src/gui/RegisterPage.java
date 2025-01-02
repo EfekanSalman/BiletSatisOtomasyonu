@@ -222,6 +222,14 @@ public class RegisterPage extends JFrame {
             return false;
         }
 
+        if (!ValidationUtils.isValidEmail(txtEmail.getText())) {
+            JOptionPane.showMessageDialog(this,
+                "Geçersiz e-posta formatı. Lütfen geçerli bir e-posta adresi girin.",
+                "Hata",
+                JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
         if (!new String(txtPassword.getPassword()).equals(new String(txtConfirmPassword.getPassword()))) {
             JOptionPane.showMessageDialog(this,
                 "Şifreler eşleşmiyor.",
@@ -248,4 +256,5 @@ public class RegisterPage extends JFrame {
 
         return true;
     }
+
 }
