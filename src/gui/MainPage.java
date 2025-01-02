@@ -918,22 +918,75 @@ public class MainPage extends JFrame {
 
         try {
             int ticketId = (int) ticketsTable.getValueAt(selectedRow, 0);
+            int totalTickets = (int) ticketsTable.getValueAt(selectedRow, 6);
             
-            int confirm = JOptionPane.showConfirmDialog(this,
-                "Bileti iptal etmek istediğinize emin misiniz?",
+            if (totalTickets == 1) {
+                int confirm = JOptionPane.showConfirmDialog(this,
+                    "Bileti iptal etmek istediğinize emin misiniz?",
+                    "Bilet İptali",
+                    JOptionPane.YES_NO_OPTION);
+                    
+                if (confirm == JOptionPane.YES_OPTION) {
+                    if (ticketDB.cancelTicket(ticketId)) {
+                        showSuccess("Bilet başarıyla iptal edildi!");
+                        loadUserTickets();
+                    }
+                }
+                return;
+            }
+
+            SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, totalTickets, 1);
+            JSpinner quantitySpinner = new JSpinner(spinnerModel);
+
+            JPanel panel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5, 5, 5, 5);
+
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            panel.add(new JLabel("İptal edilecek bilet sayısı:"), gbc);
+
+            gbc.gridx = 1;
+            panel.add(quantitySpinner, gbc);
+
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                panel,
                 "Bilet İptali",
-                JOptionPane.YES_NO_OPTION);
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+
+            if (result == JOptionPane.OK_OPTION) {
+                int quantity = (int) quantitySpinner.getValue();
                 
-            if (confirm == JOptionPane.YES_OPTION) {
-                if (ticketDB.cancelTicket(ticketId)) {
-                    showSuccess("Bilet başarıyla iptal edildi!");
-                    loadUserTickets();
+                int confirm = JOptionPane.showConfirmDialog(this,
+                    String.format("%d adet bileti iptal etmek istediğinize emin misiniz?", quantity),
+                    "Bilet İptali",
+                    JOptionPane.YES_NO_OPTION);
+                    
+                if (confirm == JOptionPane.YES_OPTION) {
+                    boolean allCancellationsSuccessful = true;
+                    for (int i = 0; i < quantity; i++) {
+                        if (!ticketDB.cancelTicket(ticketId + i)) {
+                            allCancellationsSuccessful = false;
+                            break;
+                        }
+                    }
+
+                    if (allCancellationsSuccessful) {
+                        showSuccess(String.format("%d adet bilet başarıyla iptal edildi!", quantity));
+                        loadUserTickets();
+                    } else {
+                        showError("Biletler iptal edilirken bir hata oluştu!");
+                    }
                 }
             }
         } catch (SQLException e) {
             showError("Bilet iptal edilirken hata oluştu: " + e.getMessage());
         }
     }
+
 
     private EventType getEventTypeFromCurrentTab() {
         JTabbedPane tabbedPane = (JTabbedPane) contentPane.getComponent(2);
